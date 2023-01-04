@@ -4,20 +4,27 @@ import express from "express";
 import publRouter from "./routes/publication.router.js";
 import subRouter from "./routes/subscriber.router.js";
 import subscriptionRouter from "./routes/subscription.router.js";
+import cors from "cors";
 
 const PORT = 5000;
 
 const app = express();
 
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+  })
+);
+
 app.use(express.json());
-app.use(function (req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  next();
-});
+// app.use(function (req, res, next) {
+//   res.header("Access-Control-Allow-Origin", "*");
+//   res.header(
+//     "Access-Control-Allow-Headers",
+//     "Origin, X-Requested-With, Content-Type, Accept"
+//   );
+//   next();
+// });
 app.use("/publications", publRouter);
 app.use("/subscribers", subRouter);
 app.use("/subscriptions", subscriptionRouter);

@@ -5,5 +5,6 @@ const router = express.Router();
 
 router.get("/", publicationController.getPublications);
 router.post("/", publicationController.createPublication);
+router.delete("/:id", publicationController.deletePublication);
 
 export default router;
