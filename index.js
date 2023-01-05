@@ -1,8 +1,8 @@
 "use strict";
 
 import express from "express";
-import publRouter from "./routes/publication.router.js";
-import subRouter from "./routes/subscriber.router.js";
+import publicationRouter from "./routes/publication.router.js";
+import subscriberRouter from "./routes/subscriber.router.js";
 import subscriptionRouter from "./routes/subscription.router.js";
 import cors from "cors";
 
@@ -25,8 +25,8 @@ app.use(express.json());
 //   );
 //   next();
 // });
-app.use("/publications", publRouter);
-app.use("/subscribers", subRouter);
+app.use("/publications", publicationRouter);
+app.use("/subscribers", subscriberRouter);
 app.use("/subscriptions", subscriptionRouter);
 
 app.listen(PORT, () => console.log(`SERVER STARTED ON PORT ${PORT}`));

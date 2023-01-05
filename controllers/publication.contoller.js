@@ -6,7 +6,17 @@ class PublicationController {
     try {
       await mssql.connect(sqlConfig);
       const result = await mssql.query`select * from PUBLICATIONS`;
-      res.json(result.recordset);
+      const key = "NamePublication";
+      const search = (data) => {
+        return data.filter((item) => item[key].toLowerCase().includes(query));
+      };
+      const query = req.query.query;
+      console.log(query);
+      if (query === undefined) {
+        res.json(result.recordset);
+      } else {
+        res.json(search(result.recordset));
+      }
     } catch (err) {
       console.log(err);
     }
@@ -29,7 +39,19 @@ class PublicationController {
       const result =
         await mssql.query`DELETE FROM PUBLICATIONS WHERE "Index" = ${id}`;
       res.json(result.recordset);
-      console.log(id);
+    } catch (err) {
+      console.log(err);
+      console.log(err);
+      // res.json(err.RequestError);
+    }
+  }
+  async updatePublication(req, res) {
+    try {
+      await mssql.connect(sqlConfig);
+      const { id, title, cost } = req.body;
+      const result =
+        await mssql.query`UPDATE PUBLICATIONS SET NamePublication = ${title}, Cost = ${cost} WHERE "Index" = ${id}`;
+      res.json(result.recordset);
     } catch (err) {
       console.log(err);
     }
