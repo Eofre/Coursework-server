@@ -11,7 +11,6 @@ class PublicationController {
         return data.filter((item) => item[key].toLowerCase().includes(query));
       };
       const query = req.query.query;
-      console.log(query);
       if (query === undefined) {
         res.json(result.recordset);
       } else {
@@ -40,9 +39,7 @@ class PublicationController {
         await mssql.query`DELETE FROM PUBLICATIONS WHERE "Index" = ${id}`;
       res.json(result.recordset);
     } catch (err) {
-      console.log(err);
-      console.log(err);
-      // res.json(err.RequestError);
+      console.log(err.message);
     }
   }
   async updatePublication(req, res) {
