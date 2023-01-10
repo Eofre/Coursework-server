@@ -5,19 +5,34 @@ class SubscriberController {
   async getSubscribers(req, res) {
     try {
       await mssql.connect(sqlConfig);
-      const result = await mssql.query`select * from SUBSCRIBERS`;
-      const key = "FullName";
-      const search = (data) => {
-        return data.filter((item) => item[key].toLowerCase().includes(query));
-      };
-      const query = req.query.query;
-      if (query === undefined) {
-        res.json(result.recordset);
+
+      const page = parseInt(req.query.page);
+      const limit = parseInt(req.query.limit) || 8;
+      const query = `%${req.query.query}%` || `%%`;
+      const offset = parseInt(page * limit - limit);
+      let numberOfsubscribers = 1;
+
+      const result =
+        await mssql.query`SELECT * FROM SUBSCRIBERS where FullName like ${query} ORDER BY "ID" OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY`;
+
+      if (query === `%%`) {
+        numberOfsubscribers =
+          await mssql.query`SELECT COUNT(*) as count FROM SUBSCRIBERS`;
       } else {
-        res.json(search(result.recordset));
+        numberOfsubscribers =
+          await mssql.query`SELECT COUNT(*) as count FROM SUBSCRIBERS where FullName like ${query}`;
       }
+
+      const subscribers = result.recordset;
+
+      const numberOfPages = Math.ceil(
+        numberOfsubscribers.recordset[0].count / limit
+      );
+
+      res.json({ subscribers, numberOfPages });
     } catch (err) {
       console.log(err);
+      res.status(500).json({ message: err.message });
     }
   }
   async createSubscriber(req, res) {
@@ -39,7 +54,10 @@ class SubscriberController {
         await mssql.query`DELETE FROM SUBSCRIBERS WHERE "ID" = ${id}`;
       res.json(result.recordset);
     } catch (err) {
-      console.log(err.message);
+      res.status(456).json({
+        message:
+          "This entry cannot be deleted because it is used in the Subscription table",
+      });
     }
   }
   async updateSubscriber(req, res) {

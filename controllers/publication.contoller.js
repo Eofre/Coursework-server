@@ -5,27 +5,42 @@ class PublicationController {
   async getPublications(req, res) {
     try {
       await mssql.connect(sqlConfig);
-      const result = await mssql.query`select * from PUBLICATIONS`;
-      const key = "NamePublication";
-      const search = (data) => {
-        return data.filter((item) => item[key].toLowerCase().includes(query));
-      };
-      const query = req.query.query;
-      if (query === undefined) {
-        res.json(result.recordset);
+
+      const page = parseInt(req.query.page);
+      const limit = parseInt(req.query.limit) || 8;
+      const query = `%${req.query.query}%` || `%%`;
+      const offset = parseInt(page * limit - limit);
+      let numberOfpublications = 1;
+
+      const result =
+        await mssql.query`SELECT * FROM PUBLICATIONS where NamePublication like ${query} ORDER BY "Index" OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY`;
+
+      if (query === `%%`) {
+        numberOfpublications =
+          await mssql.query`SELECT COUNT(*) as count FROM PUBLICATIONS`;
       } else {
-        res.json(search(result.recordset));
+        numberOfpublications =
+          await mssql.query`SELECT COUNT(*) as count FROM PUBLICATIONS where NamePublication like ${query}`;
       }
+
+      const publications = result.recordset;
+
+      const numberOfPages = Math.ceil(
+        numberOfpublications.recordset[0].count / limit
+      );
+
+      res.json({ publications, numberOfPages });
     } catch (err) {
       console.log(err);
+      res.status(500).json({ message: err.message });
     }
   }
   async createPublication(req, res) {
     try {
       await mssql.connect(sqlConfig);
-      const { title, cost } = req.body;
+      const { titlePublication, costPublication } = req.body;
       const result =
-        await mssql.query`INSERT PUBLICATIONS VALUES (${title}, ${cost})`;
+        await mssql.query`INSERT PUBLICATIONS VALUES (${titlePublication}, ${costPublication})`;
       res.json(result.recordset);
     } catch (err) {
       console.log(err);
@@ -39,15 +54,19 @@ class PublicationController {
         await mssql.query`DELETE FROM PUBLICATIONS WHERE "Index" = ${id}`;
       res.json(result.recordset);
     } catch (err) {
-      console.log(err.message);
+      res.status(456).json({
+        message:
+          "This entry cannot be deleted because it is used in the Subscription table",
+      });
+      console.log({ message: "Данная запись не может быть удалена" });
     }
   }
   async updatePublication(req, res) {
     try {
       await mssql.connect(sqlConfig);
-      const { id, title, cost } = req.body;
+      const { id, titlePublication, costPublication } = req.body;
       const result =
-        await mssql.query`UPDATE PUBLICATIONS SET NamePublication = ${title}, Cost = ${cost} WHERE "Index" = ${id}`;
+        await mssql.query`UPDATE PUBLICATIONS SET NamePublication = ${titlePublication}, Cost = ${costPublication} WHERE "Index" = ${id}`;
       res.json(result.recordset);
     } catch (err) {
       console.log(err);
