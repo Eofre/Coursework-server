@@ -43,6 +43,11 @@ class PublicationController {
         await mssql.query`INSERT PUBLICATIONS VALUES (${titlePublication}, ${costPublication})`;
       res.json(result.recordset);
     } catch (err) {
+      let messageErrorMoney =
+        "Cannot convert a char value to money. The char value has incorrect syntax.";
+      if (err.message === messageErrorMoney) {
+        res.status(500).json({ message: "The cost cannot be a string" });
+      }
       console.log(err);
     }
   }
