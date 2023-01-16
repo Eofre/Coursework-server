@@ -5,5 +5,6 @@ const router = express.Router();
 
 router.get("/", subscriptionController.getSubscriptions);
 router.post("/", subscriptionController.createSubscription);
+router.delete("/:id", subscriptionController.deleteSubscription);
 
 export default router;

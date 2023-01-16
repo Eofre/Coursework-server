@@ -28,7 +28,9 @@ class AuditController {
       const numberOfPages = Math.ceil(
         numberOfevents.recordset[0].count / limit
       );
-
+      for (let i = 0; i < events.length; i++) {
+        events[i].EventDateTime = String(events[i].EventDateTime);
+      }
       res.json({ events, numberOfPages });
     } catch (err) {
       console.log(err);

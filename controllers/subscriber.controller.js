@@ -6,30 +6,35 @@ class SubscriberController {
     try {
       await mssql.connect(sqlConfig);
 
-      const page = parseInt(req.query.page);
-      const limit = parseInt(req.query.limit) || 8;
-      const query = `%${req.query.query}%` || `%%`;
-      const offset = parseInt(page * limit - limit);
-      let numberOfsubscribers = 1;
-
-      const result =
-        await mssql.query`SELECT * FROM SUBSCRIBERS where FullName like ${query} ORDER BY "ID" OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY`;
-
-      if (query === `%%`) {
-        numberOfsubscribers =
-          await mssql.query`SELECT COUNT(*) as count FROM SUBSCRIBERS`;
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit);
+      if (limit === 0) {
+        const list = await mssql.query`SELECT * FROM SUBSCRIBERS`;
+        res.json(list.recordset);
       } else {
-        numberOfsubscribers =
-          await mssql.query`SELECT COUNT(*) as count FROM SUBSCRIBERS where FullName like ${query}`;
+        const query = `%${req.query.query}%` || `%%`;
+        const offset = parseInt(page * limit - limit);
+        let numberOfsubscribers = 1;
+
+        const result =
+          await mssql.query`SELECT * FROM SUBSCRIBERS where FullName like ${query} ORDER BY "ID" OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY`;
+
+        if (query === `%%`) {
+          numberOfsubscribers =
+            await mssql.query`SELECT COUNT(*) as count FROM SUBSCRIBERS`;
+        } else {
+          numberOfsubscribers =
+            await mssql.query`SELECT COUNT(*) as count FROM SUBSCRIBERS where FullName like ${query}`;
+        }
+
+        const subscribers = result.recordset;
+
+        const numberOfPages = Math.ceil(
+          numberOfsubscribers.recordset[0].count / limit
+        );
+
+        res.json({ subscribers, numberOfPages });
       }
-
-      const subscribers = result.recordset;
-
-      const numberOfPages = Math.ceil(
-        numberOfsubscribers.recordset[0].count / limit
-      );
-
-      res.json({ subscribers, numberOfPages });
     } catch (err) {
       console.log(err);
       res.status(500).json({ message: err.message });

@@ -7,29 +7,34 @@ class PublicationController {
       await mssql.connect(sqlConfig);
 
       const page = parseInt(req.query.page);
-      const limit = parseInt(req.query.limit) || 8;
-      const query = `%${req.query.query}%` || `%%`;
-      const offset = parseInt(page * limit - limit);
-      let numberOfpublications = 1;
-
-      const result =
-        await mssql.query`SELECT * FROM PUBLICATIONS where NamePublication like ${query} ORDER BY "Index" OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY`;
-
-      if (query === `%%`) {
-        numberOfpublications =
-          await mssql.query`SELECT COUNT(*) as count FROM PUBLICATIONS`;
+      const limit = parseInt(req.query.limit);
+      if (limit === 0) {
+        const list = await mssql.query`SELECT * FROM PUBLICATIONS`;
+        res.json(list.recordset);
       } else {
-        numberOfpublications =
-          await mssql.query`SELECT COUNT(*) as count FROM PUBLICATIONS where NamePublication like ${query}`;
+        const query = `%${req.query.query}%` || `%%`;
+        const offset = parseInt(page * limit - limit);
+        let numberOfpublications = 1;
+
+        const result =
+          await mssql.query`SELECT * FROM PUBLICATIONS where NamePublication like ${query} ORDER BY "Index" OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY`;
+
+        if (query === `%%`) {
+          numberOfpublications =
+            await mssql.query`SELECT COUNT(*) as count FROM PUBLICATIONS`;
+        } else {
+          numberOfpublications =
+            await mssql.query`SELECT COUNT(*) as count FROM PUBLICATIONS where NamePublication like ${query}`;
+        }
+
+        const publications = result.recordset;
+
+        const numberOfPages = Math.ceil(
+          numberOfpublications.recordset[0].count / limit
+        );
+
+        res.json({ publications, numberOfPages });
       }
-
-      const publications = result.recordset;
-
-      const numberOfPages = Math.ceil(
-        numberOfpublications.recordset[0].count / limit
-      );
-
-      res.json({ publications, numberOfPages });
     } catch (err) {
       console.log(err);
       res.status(500).json({ message: err.message });
