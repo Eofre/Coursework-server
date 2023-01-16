@@ -67,13 +67,13 @@ class SubscriptionController {
       console.log(err.message);
     }
   }
-  async updateSubscriber(req, res) {
+  async updateSubscription(req, res) {
     try {
       await mssql.connect(sqlConfig);
       const { idEntry, indexPublication, idSubscriber, monthOfSub, startDate } =
         req.body;
       const result =
-        await mssql.query`UPDATE SUBSCRIBER_HAS_PUBLICATION SET Index = ${indexPublication}, ID = ${idSubscriber},  MonthOfSub = ${monthOfSub}, StartDate = ${startDate} WHERE "idEntry" = ${idEntry}`;
+        await mssql.query`UPDATE SUBSCRIBER_HAS_PUBLICATION SET "Index" = ${indexPublication}, ID = ${idSubscriber},  MonthOfSub = ${monthOfSub}, StartDate = ${startDate} WHERE "idEntry" = ${idEntry}`;
       res.json(result.recordset);
     } catch (err) {
       let messageError = `The INSERT statement conflicted with the CHECK constraint "CHK_StartDate". The conflict occurred in database "Publications3", table "dbo.SUBSCRIBER_HAS_PUBLICATION", column 'StartDate'.`;
